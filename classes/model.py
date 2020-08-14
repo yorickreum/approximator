@@ -3,6 +3,7 @@ import itertools
 import torch
 
 import approximator
+from approximator.classes.discretization import Discretization
 from approximator.classes.net import ApproximationNet
 
 import numpy as np
@@ -12,7 +13,7 @@ from approximator.classes.problem import Problem
 
 class Model:
 
-    def __init__(self, problem: Problem, discretization, n_hidden, n_neurons, device=approximator.DEVICE):
+    def __init__(self, problem: Problem, discretization: Discretization, n_hidden, n_neurons, device=approximator.DEVICE):
         print("Device: ", device)
         self.device = device
 
@@ -26,8 +27,8 @@ class Model:
         self.constraints = problem.constraints
 
         x_space, y_space = \
-            np.arange(problem.domain.x_min, problem.domain.x_max, discretization.x_step), \
-            np.arange(problem.domain.y_min, problem.domain.y_max, discretization.y_step)
+            discretization.get_x_space(problem.domain.x_min, problem.domain.x_max), \
+            discretization.get_y_space(problem.domain.y_min, problem.domain.y_max)
 
         self.constrained_inputs = []
         for constraint in self.constraints:

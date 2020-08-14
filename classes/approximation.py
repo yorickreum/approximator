@@ -3,18 +3,14 @@ import time
 import torch
 
 import approximator
+from approximator.classes.discretization import Discretization
 from approximator.classes.model import Model
 from approximator.classes.problem import Problem
 
 
-class Discretization:
-    def __init__(self, x_step, y_step):
-        self.x_step = x_step
-        self.y_step = y_step
-
-
 class Approximation:
-    def __init__(self, problem: Problem, discretization: Discretization, n_hidden_layers, n_neurons_per_layer, learning_rate,
+    def __init__(self, problem: Problem, discretization: Discretization, n_hidden_layers, n_neurons_per_layer,
+                 learning_rate,
                  epochs):
         self.epochs = epochs
         self.learning_rate = learning_rate

@@ -1,6 +1,7 @@
 import torch
 
-from approximator.classes.approximation import Approximation, Discretization
+from approximator.classes.approximation import Approximation
+from approximator.classes.discretization import Discretization, StepSizeDiscretization
 from approximator.classes.constraint import Constraint
 from approximator.classes.problem import Domain, Problem
 from approximator.utils.visualization import plot_approximation
@@ -22,7 +23,7 @@ problem = Problem(
 
 approximation = Approximation(
     problem=problem,
-    discretization=Discretization(
+    discretization=StepSizeDiscretization(
         x_step=.05,
         y_step=.05
     ),
