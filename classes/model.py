@@ -3,11 +3,11 @@ import itertools
 import torch
 
 import approximator
-from approximator.net import ApproximationNet
+from approximator.classes.net import ApproximationNet
 
 import numpy as np
 
-from approximator.problem import Problem
+from approximator.classes.problem import Problem
 
 
 class Model:

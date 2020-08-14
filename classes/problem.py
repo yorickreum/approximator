@@ -1,6 +1,6 @@
 from typing import List
 
-from approximator.constraint import Constraint
+from approximator.classes.constraint import Constraint
 
 
 class Domain:

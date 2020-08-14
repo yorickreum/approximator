@@ -3,8 +3,8 @@ import time
 import torch
 
 import approximator
-from approximator.model import Model
-from approximator.problem import Problem
+from approximator.classes.model import Model
+from approximator.classes.problem import Problem
 
 
 class Discretization:
@@ -14,11 +14,11 @@ class Discretization:
 
 
 class Approximation:
-    def __init__(self, problem: Problem, discretization: Discretization, n_hidden_layers, n_neurons, learning_rate,
+    def __init__(self, problem: Problem, discretization: Discretization, n_hidden_layers, n_neurons_per_layer, learning_rate,
                  epochs):
         self.epochs = epochs
         self.learning_rate = learning_rate
-        self.n_neurons = n_neurons
+        self.n_neurons = n_neurons_per_layer
         self.n_hidden_layers = n_hidden_layers
         self.discretization = discretization
         self.problem = problem

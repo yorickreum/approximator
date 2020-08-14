@@ -1,16 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from approximator.approximation import Approximation
+from approximator.classes.approximation import Approximation
 
 
 def plot_approximation(appoximation: Approximation):
     problem = appoximation.problem
-    discretization = appoximation.discretization
+    # discretization = appoximation.discretization
 
     x_space, y_space = \
-        np.arange(problem.domain.x_min, problem.domain.x_max, discretization.x_step), \
-        np.arange(problem.domain.y_min, problem.domain.y_max, discretization.y_step)
+        np.linspace(problem.domain.x_min, problem.domain.x_max, 40), \
+        np.linspace(problem.domain.y_min, problem.domain.y_max, 40)
     z_space = []
     for y_i, y in enumerate(y_space):
         z_space += [[]]
