@@ -53,4 +53,4 @@ class Approximation:
         torch.save(self.model.net, "./run/model.pt")
 
     def use(self, x: float, y: float):
-        return self.model.net(torch.tensor([x, y], dtype=approximator.DTYPE)).item()
+        return self.model.net(torch.tensor([x, y], dtype=approximator.DTYPE, device=approximator.DEVICE)).item()

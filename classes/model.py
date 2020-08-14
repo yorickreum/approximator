@@ -13,7 +13,8 @@ from approximator.classes.problem import Problem
 
 class Model:
 
-    def __init__(self, problem: Problem, discretization: Discretization, n_hidden, n_neurons, device=approximator.DEVICE):
+    def __init__(self, problem: Problem, discretization: Discretization, n_hidden, n_neurons,
+                 device=approximator.DEVICE):
         print("Device: ", device)
         self.device = device
 
@@ -37,11 +38,18 @@ class Model:
                 x, y = [r[0], r[1]]
                 if constraint.conditionf(x, y):
                     constrained_input += [[x, y]]
+            if len(constrained_input) == 0:
+                raise RuntimeWarning("Constraint condition was never met in discretized domain!")
             self.constrained_inputs += [torch.tensor(
                 constrained_input,
                 dtype=approximator.DTYPE,
                 requires_grad=True,
                 device=self.device)]
+
+        intersection = set.intersection(*[set(ci) for ci in self.constrained_inputs])
+        if len(intersection) > 0:
+            raise RuntimeWarning("Multiple constraint conditions apply for at least one point, "
+                                 "this can lead to unpredictable behaviour.")
 
     def loss_func(self):
         predictions = [self.net(constrained_input) for constrained_input in self.constrained_inputs]
