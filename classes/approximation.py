@@ -25,7 +25,7 @@ class Approximation:
 
     def train(self):
         parameters = self.model.net.parameters()
-        optimizer = torch.optim.AdamW(parameters, lr=self.learning_rate)
+        optimizer = torch.optim.Adam(parameters, lr=self.learning_rate)
 
         start_epoches = time.time()
         for i in range(self.epochs):
@@ -50,7 +50,11 @@ class Approximation:
                             break
         end_epoches = time.time()
 
-        torch.save(self.model.net, "./run/model.pt")
+        torch.save(self.model.net, f"./run/net.pt")
+        # torch.save(self, "./run/approximation.pt")
+
+    def load(self):
+        self.model.net = torch.load(f"./run/net.pt", map_location=approximator.DEVICE)
 
     def use(self, x: float, y: float):
         return self.model.net(torch.tensor([x, y], dtype=approximator.DTYPE, device=approximator.DEVICE)).item()

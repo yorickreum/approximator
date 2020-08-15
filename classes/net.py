@@ -21,18 +21,18 @@ class ApproximationNet(nn.Module):
         self.device = device
 
         self.hidden1 = torch.nn.Linear(2, n_hidden_neurons, bias=True)  # hidden layer
-        self.hidden1.to(device=self.device)
+        self.hidden1.to(device=self.device, dtype=approximator.DTYPE)
         # torch.nn.init.xavier_normal_(self.hidden1.weight)
 
         self.hidden_layers = nn.ModuleList([])
         for i in range(n_hidden_layers):
             new_hidden_layer = torch.nn.Linear(n_hidden_neurons, n_hidden_neurons, bias=True)
-            new_hidden_layer.to(device=self.device)
+            new_hidden_layer.to(device=self.device, dtype=approximator.DTYPE)
             # torch.nn.init.xavier_normal_(new_hidden_layer.weight)
             self.hidden_layers.append(new_hidden_layer)  # hidden layer
 
         self.predict = torch.nn.Linear(n_hidden_neurons, 1,  bias=True)  # output layer
-        self.predict.to(device=self.device)
+        self.predict.to(device=self.device, dtype=approximator.DTYPE)
         # torch.nn.init.xavier_normal_(self.predict.weight)
 
     def forward(self, x):

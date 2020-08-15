@@ -6,9 +6,11 @@ import approximator
 from approximator.classes.discretization import Discretization
 from approximator.classes.net import ApproximationNet
 
-import numpy as np
-
 from approximator.classes.problem import Problem
+
+
+def magnitude(x: torch.tensor):
+    return int(torch.log10(x))
 
 
 class Model:
@@ -46,16 +48,19 @@ class Model:
                 requires_grad=True,
                 device=self.device)]
 
-        intersection = set.intersection(*[set(ci) for ci in self.constrained_inputs])
-        if len(intersection) > 0:
-            raise RuntimeWarning("Multiple constraint conditions apply for at least one point, "
-                                 "this can lead to unpredictable behaviour.")
+        if len(self.constrained_inputs) > 1:
+            intersection = set.intersection(*[set(ci) for ci in self.constrained_inputs])
+            if len(intersection) > 0:
+                raise RuntimeWarning("Multiple constraint conditions apply for at least one point, "
+                                     "this can lead to unpredictable behaviour.")
 
     def loss_func(self):
         predictions = [self.net(constrained_input) for constrained_input in self.constrained_inputs]
         residuals = [self.constraints[i].residualf(self.constrained_inputs[i], prediction)
                      for i, prediction in enumerate(predictions)]
         reduced_residuals = [torch.mean(residual) for residual in residuals]
+        print("mean residuals")
+        print(reduced_residuals)
         loss = sum(reduced_residuals)
         return loss
 

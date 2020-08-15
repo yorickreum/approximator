@@ -24,13 +24,13 @@ problem = Problem(
 approximation = Approximation(
     problem=problem,
     discretization=StepSizeDiscretization(
-        x_step=.05,
-        y_step=.05
+        x_step=.01,
+        y_step=.01
     ),
     n_hidden_layers=5,
     n_neurons_per_layer=10,
     learning_rate=.001,
-    epochs=int(1e3)
+    epochs=int(500)
 )
 
 

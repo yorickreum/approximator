@@ -5,12 +5,12 @@ from approximator.classes.approximation import Approximation
 
 
 def plot_approximation(appoximation: Approximation):
-    x_resolution = 40
-    y_resolution = 40
-    z_resolution = 40
-
     problem = appoximation.problem
-    # discretization = appoximation.discretization
+    discretization = appoximation.discretization
+
+    x_resolution = max(len(discretization.get_x_space(problem.domain.x_min, problem.domain.x_max)), 100)
+    y_resolution = max(len(discretization.get_y_space(problem.domain.y_min, problem.domain.y_max)), 100)
+    z_resolution = 100
 
     x_space, y_space = \
         np.linspace(problem.domain.x_min, problem.domain.x_max, x_resolution), \
@@ -26,4 +26,6 @@ def plot_approximation(appoximation: Approximation):
     ax.contour(cs, colors='k')
     cbar = fig.colorbar(cs)  # Make a colorbar for the ContourSet returned by the contourf call
     ax.grid(c='k', ls='-', alpha=0.3)  # Plot grid.
+    plt.savefig(f'./run/plt.pdf')
+    plt.savefig(f'./run/plt.png')
     plt.show()
