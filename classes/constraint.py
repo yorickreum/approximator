@@ -5,9 +5,10 @@ import torch
 
 
 class Constraint:
-    def __init__(self, condition: Callable, residual: callable):
+    def __init__(self, condition: Callable, residual: callable, identifier=""):
         self.conditionf = condition
         self.__residualf = residual
+        self.identifier = identifier
 
     def residualf(self, input: torch.tensor, prediction: torch.tensor):
         sig = signature(self.__residualf)

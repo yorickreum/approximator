@@ -1,10 +1,9 @@
-import torch
-import numpy as np
+import os
+from shutil import copyfile
 
-import approximator
 from approximator.classes.approximation import Approximation
-from approximator.classes.discretization import Discretization, StepsDiscretization
 from approximator.classes.constraint import Constraint
+from approximator.classes.discretization import StepsDiscretization, RandomStepsDiscretization
 from approximator.classes.problem import Problem, Domain
 from approximator.examples.richards.func_lib import get_res
 from approximator.utils.visualization import plot_approximation
@@ -12,7 +11,7 @@ from approximator.utils.visualization import plot_approximation
 problem = Problem(
     Domain(
         x_min=0,  # x is time t in s
-        x_max=100,
+        x_max=20,
         y_min=0,  # y is elevation z in cm
         y_max=40  # attention: in SimPEG this is probably 39?
     ),
@@ -38,15 +37,33 @@ problem = Problem(
 
 approximation = Approximation(
     problem=problem,
-    discretization=StepsDiscretization(
-        x_steps=400,
-        y_steps=200
+    discretization=RandomStepsDiscretization(
+        x_steps=100,
+        y_steps=40,
+        x_certain=[0],
+        y_certain=[0, 40]
     ),
     n_hidden_layers=10,
     n_neurons_per_layer=40,
-    learning_rate=.0001,
-    epochs=int(1e5)
+    learning_rate=.00001,
+    epochs=int(2e3)
 )
+
+
+def train_richards(pretrained_model=None):
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    if pretrained_model is None:
+        current_model = 1
+    else:
+        current_model = pretrained_model + 1
+        approximation.load(os.path.join(dir_path, f"trained_models/{pretrained_model}/net.pt"))
+    os.mkdir(os.path.join(dir_path, f"trained_models/{current_model}/"))
+    copyfile(os.path.join(dir_path, f"richards.py"),
+             os.path.join(dir_path, f"trained_models/{current_model}/config.py"))
+    approximation.train()
+    print('quick check result:')
+    print([str(approximation.use(0, z)) for z in range(41)])
+    copyfile(f"./run/net.pt", os.path.join(dir_path, f"trained_models/{current_model}/net.pt"))
 
 
 def plot_richards(train=False):

@@ -1,60 +1,92 @@
 import time
 
+import numpy as np
 import torch
+from torch import nn
 
 import approximator
 from approximator.classes.discretization import Discretization
-from approximator.classes.model import Model
 from approximator.classes.problem import Problem
 
 
 class Approximation:
-    def __init__(self, problem: Problem, discretization: Discretization, n_hidden_layers, n_neurons_per_layer,
-                 learning_rate,
-                 epochs):
-        self.epochs = epochs
-        self.learning_rate = learning_rate
-        self.n_neurons = n_neurons_per_layer
-        self.n_hidden_layers = n_hidden_layers
-        self.discretization = discretization
+    def __init__(self, problem: Problem, net: nn.Module):
+        self.losses = []
+        self.net = net
+        if approximator.DTYPE == torch.double:
+            self.net.double()
+        self.net = self.net.to(device=approximator.DEVICE)
         self.problem = problem
-        self.model = Model(problem=problem,
-                           discretization=discretization,
-                           n_hidden=self.n_hidden_layers,
-                           n_neurons=self.n_neurons)
 
-    def train(self):
-        parameters = self.model.net.parameters()
-        optimizer = torch.optim.Adam(parameters, lr=self.learning_rate)
+    def train(self, learning_rate, epochs, discretization: Discretization):
+        parameters = self.net.parameters()
+        optimizer = torch.optim.Adam(parameters, lr=learning_rate)
+
+        print("constraints")
+        print([c.identifier for c in self.problem.constraints])
 
         start_epoches = time.time()
-        for i in range(self.epochs):
-            optimizer.zero_grad()  # clear gradients for next train
-            loss = self.model.loss_func()
-            with torch.no_grad():
-                if i % approximator.LOGSTEPS == 0:
-                    print("step " + str(i) + ": ")
-                    print(loss)
-            loss.backward()  # backpropagation, compute gradients
-            optimizer.step()  # apply gradients
-            # check if has converged, break early
-            with torch.no_grad():
-                if i % 10 == 0:
-                    if len(self.model.net.losses) >= 11:
-                        last_loss_changes = [
-                            torch.abs(a_i - b_i)
-                            for a_i, b_i in zip(self.model.net.losses[-10:], self.model.net.losses[-11:-1])
-                        ]
-                        if all(llc <= torch.finfo(approximator.DTYPE).eps for llc in last_loss_changes):
-                            # or: use max instead of all
-                            break
+        try:
+            for i in range(epochs):
+                print("# step " + str(i) + ": #")
+                optimizer.zero_grad()  # clear gradients for next train
+                loss = self.loss_func(discretization=discretization)
+                loss.backward()  # backpropagation, compute gradients
+                optimizer.step()  # apply gradients
+                self.losses += [loss.item()]
+                # check if has converged, break early, @TODO
+                # with torch.no_grad():
+                #     if i % 10 == 0:
+                #         if len(self.losses) >= 11:
+                #             last_loss_changes = [
+                #                 np.abs(a_i - b_i)
+                #                 for a_i, b_i in zip(self.losses[-10:], self.losses[-11:-1])
+                #             ]
+                #             if all(llc <= torch.finfo(approximator.DTYPE).eps for llc in last_loss_changes):
+                #                 # or: use max instead of all
+                #                 break
+        except KeyboardInterrupt:
+            pass
+
         end_epoches = time.time()
 
-        torch.save(self.model.net, f"./run/net.pt")
+        torch.save(self.net, f"./run/net.pt")
         # torch.save(self, "./run/approximation.pt")
 
-    def load(self):
-        self.model.net = torch.load(f"./run/net.pt", map_location=approximator.DEVICE)
+        if len(self.losses) >= 2:
+            print("loss difference: " + str(self.losses[-1] - self.losses[0]))
+            print("loss decay: " + str((self.losses[-1] - self.losses[0]) / self.losses[0]))
+
+    def loss_func(self, discretization: Discretization):
+        constrained_inputs = discretization.get_spaces_for_constraints(self.problem)
+
+        predictions = [self.net(constrained_input) for constrained_input in constrained_inputs]
+        residuals = [self.problem.constraints[i].residualf(constrained_inputs[i], prediction)
+                     for i, prediction in enumerate(predictions)]
+        reduced_residuals = [torch.mean(residual) for residual in residuals]
+        print("mean residuals:")
+        print("\n".join(
+            [str(res.item()) + " for " + self.problem.constraints[i].identifier
+             for i, res in enumerate(reduced_residuals)])
+        )
+        loss = sum(reduced_residuals)
+        print("loss: " + str(loss.item()))
+        return loss
+
+    def load(self, path=None):
+        if path is not None:
+            self.net = torch.load(path, map_location=approximator.DEVICE)
+        else:
+            self.net = torch.load(f"./run/net.pt", map_location=approximator.DEVICE)
 
     def use(self, x: float, y: float):
-        return self.model.net(torch.tensor([x, y], dtype=approximator.DTYPE, device=approximator.DEVICE)).item()
+        return self.net(torch.tensor([x, y], dtype=approximator.DTYPE, device=approximator.DEVICE)).item()
+
+    def res(self, x: float, y: float):
+        res = None
+        for c in self.problem.constraints:
+            if c.conditionf(x, y):
+                input = torch.tensor([[x, y]], requires_grad=True, dtype=approximator.DTYPE, device=approximator.DEVICE)
+                output = self.net(input)
+                res = c.residualf(input, output).item()
+        return res
