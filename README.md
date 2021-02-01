@@ -2,9 +2,9 @@
 
 Uses PyTorch to approximate arbitrary functions (currently from 2D to 1D) by giving a domain and one or multiple residuals for (parts of) the domain. 
 
-## Examples
+## Examples (in `examples/`)
 ### sin
-Approximate a explicitly given function.
+Approximate an explicitly given function.
 
 ### circle
 Approximate a piecewise given function.

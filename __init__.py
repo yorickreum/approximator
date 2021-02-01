@@ -9,7 +9,7 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 # constants
-DTYPE = torch.float32  # convergence seems to be faster with float64
+DTYPE = torch.float64  # convergence seems to be faster with float64
 # LOGSTEPS = 1
 
 if torch.cuda.is_available():
@@ -18,9 +18,11 @@ else:
     DEVICE = torch.device('cpu')
 
 # print more digits, especially for loss
-torch.set_printoptions(precision=5)
+torch.set_printoptions(precision=5, sci_mode=True)
 
 # reproducibility
 # seed = 42
 # torch.manual_seed(seed)
 # np.random.seed(seed)
+
+os.environ['PATH'] = os.environ['PATH'] + ':/Library/TeX/texbin'

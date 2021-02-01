@@ -37,7 +37,8 @@ class ApproximationNet(nn.Module):
 
     def forward(self, x):
         # @TODO check / maybe change sign of tanh
-        x = torch.tanh(self.hidden1(x))  # tanh activation function for first hidden layer
+        x = self.hidden1(x)
+        # no activation function for first hidden layer to avoid problems if x is not normalized
         for layer in self.hidden_layers:
             x = torch.tanh(layer(x))
         # x = -torch.exp(self.predict(x))

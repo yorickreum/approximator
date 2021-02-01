@@ -1,5 +1,5 @@
 .idea/
-run/
+run_old/
 *.pt
 *.sh
 __pycache__

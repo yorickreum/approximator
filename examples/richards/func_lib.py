@@ -2,7 +2,8 @@ import torch
 
 import approximator
 
-alpha = 1.611e6
+# alpha = 1.611e6  # cm
+alpha = 0.019368480041686537  # m
 theta_s = 0.287
 theta_r = 0.075
 beta = 3.96
@@ -12,8 +13,9 @@ def theta(h: torch.tensor):
     return ((alpha * (theta_s - theta_r)) / (alpha + torch.abs(h) ** beta)) + theta_r
 
 
-Ks = 0.009444444444
-A = 1.175e6
+Ks = 0.34  # in m per h
+# A = 1.175e6 # cm
+A = 0.0003890790677420439  # in m
 gamma = 4.74
 
 
