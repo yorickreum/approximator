@@ -1,6 +1,8 @@
 .idea/
 run/
 run_old/
+run*
+trained_models/
 *.pt
 *.sh
 __pycache__
