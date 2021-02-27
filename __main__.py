@@ -38,11 +38,12 @@
 # # heat_hyperstudy()
 
 
-from approximator.examples.richards_remo.richards import train_richards, plot_richards
+from approximator.examples.richards.richards import train_richards
 
-last_model = 6
+last_model = None
 train_richards(last_model)
 # plot_richards(last_model)
+# plot_richards_theta(last_model)
 # plot_richards_res(last_model)
 # plot_richards_difference(last_model, simpeg_csv=f'./results_celia_720s.csv')
 # plot_richards_celialike(trained_model=last_model)

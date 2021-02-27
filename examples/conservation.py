@@ -16,14 +16,10 @@ problem = Problem(
         y_max=1
     ),
     [
-        Constraint(
-            lambda x, y: 1 >= x >= 0 == y,
-            lambda x, y, prediction: (prediction - (x ** 2 + torch.exp(- x ** 2))) ** 2
-        ),
-        Constraint(
-            lambda x, y: not (1 >= x >= 0 == y),
-            lambda input, prediction: conservation(input, prediction) ** 2
-        )
+        Constraint(nope, lambda x, y: 1 >= x >= 0 == y,
+                   lambda x, y, prediction: (prediction - (x ** 2 + torch.exp(- x ** 2))) ** 2),
+        Constraint(nope, lambda x, y: not (1 >= x >= 0 == y),
+                   lambda input, prediction: conservation(input, prediction) ** 2)
     ]
 )
 

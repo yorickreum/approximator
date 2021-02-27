@@ -15,93 +15,51 @@ from approximator.classes.discretization import StepsDiscretization
 from approximator.classes.net import ApproximationNet
 from approximator.classes.problem import Problem, Domain
 from approximator.examples.richards_remo.extract_from_remo import remo_theta_1, remo_theta_3
-from approximator.examples.richards_remo.func_lib import get_res, h_by_theta, h_sat, flux_Q, K_sat
+from approximator.examples.richards_remo.func_lib import get_res, h_by_theta, h_sat, flux_Q, K_sat, upper_boundary_h, \
+    lower_boundary_h, initial_h, theta_by_h
 from approximator.utils.visualization import plot_x_y_z
 
 # 2: 0.065-0.254 m
 # --> shift potential to be zero at 0.254 m
 # --> 2: 0 m  (lower boundary) - 0.189 m (upper boundary)
 domain = Domain(
-    x_min=0,  # x is time, t in weeks
-    x_max=.55,
-    y_min=0,
-    y_max=1
+    x_min=0,  # x is time, t in hours
+    x_max=0.1,  # 6 mins
+    y_min=0,  # y is elevation in m
+    y_max=0.254
     # y_min=0.065,  # y is spacial, z in m, positive/increasing upwards
     # y_max=0.254
 )
 
-
-# @TODO not pretty, too much copying, maybe interpolate on GPU using pytorch?
-# https://gist.github.com/peteflorence/a1da2c759ca1ac2b74af9a83f69ce20e
-def get_res_upper(x, y, prediction):
-    t_vals_cpu = x.cpu().tolist()
-    remo_theta_1_tensor = torch.tensor(remo_theta_1(t_vals_cpu), device=approximator.DEVICE,
-                                       requires_grad=False)  # , requires_grad=False
-    residual = prediction - h_by_theta(remo_theta_1_tensor)
-    return residual
-    # return prediction - 0
+pass
 
 
-def get_res_lower(x, y, prediction):
-    t_vals_cpu = x.cpu().tolist()
-    remo_theta_3_tensor = torch.tensor(remo_theta_3(t_vals_cpu), device=approximator.DEVICE,
-                                       requires_grad=False)  # , requires_grad=False
-    residual = prediction - h_by_theta(remo_theta_3_tensor)
-    return residual
-    # return prediction - 0
+def get_res_initial(x, y, prediction):
+    epsilon = 0.01
+    initial_h_curved = initial_h - \
+                       torch.exp(-((y - domain.y_min) / epsilon) ** 2) * (initial_h - lower_boundary_h) - \
+                       torch.exp(-((y - domain.y_max) / epsilon) ** 2) * (initial_h - upper_boundary_h)
+    return prediction - initial_h_curved
 
 
 problem = Problem(
     domain,
     [
-        # Constraint(
-        #     condition=lambda x, y: x == 0,
-        #     residual=lambda x, y, prediction: (prediction - remo_wsi_2_h) ** 2,  # initial condition
-        #     identifier="initial condition"
-        # ),
-        # # @TODO avoid .cpu() for speedup
-        # Constraint(
-        #     # upper boundary to layer 1
-        #     condition=lambda x, y: y == domain.y_min,
-        #     residual=lambda x, y, prediction: (get_res_upper(x, y, prediction)) ** 2,
-        #     identifier="upper boundary"
-        # ),
-        # Constraint(
-        #     # upper boundary to layer 3
-        #     condition=lambda x, y: y == domain.y_max,
-        #     # residual=lambda x, y, prediction: (prediction - (-.207)) ** 2,
-        #     residual=lambda x, y, prediction: (get_res_lower(x, y, prediction)) ** 2,
-        #     identifier="lower boundary"
-        # ),
-        Constraint(
-            condition=lambda x, y: x == domain.x_min,
-            residual=lambda x, y, prediction: (prediction - ((1 / 4) * h_sat)) ** 2,
-            identifier="initial condition"
-        ),
-        Constraint(
-            condition=lambda x, y: y == domain.y_min,
-            # constant flux, Dirichlet boundary condition
-            residual=lambda input, prediction: (flux_Q(input, prediction) - K_sat / 4) ** 2,
-            # residual=lambda x, y, prediction: (prediction - ((1 / 4) * h_sat)) ** 2,
-            identifier="upper boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: y == domain.y_max,
-            # residual=lambda x, y, prediction: (prediction - (-.207)) ** 2,
-            # residual=lambda x, y, prediction: (prediction - (h_sat)) ** 2,
-            residual=lambda x, y, prediction: (prediction - ((1 / 4) * h_sat)) ** 2,
-            identifier="lower boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: not (x == domain.x_min or y == domain.y_min or y == domain.y_max),
-            residual=lambda input, prediction: (get_res(input, prediction)) ** 2,
-            identifier="pde"
-        )
+        Constraint(identifier="initial condition", condition=lambda x, y: x == domain.x_min,
+                   residual=lambda x, y, prediction: (get_res_initial(x, y, prediction)) ** 2, prepone=True),
+        Constraint(identifier="upper boundary", condition=lambda x, y: y == domain.y_max,
+                   residual=lambda input, prediction: (prediction - upper_boundary_h) ** 2, prepone=True),
+        Constraint(identifier="lower boundary", condition=lambda x, y: y == domain.y_min,
+                   residual=lambda x, y, prediction: (prediction - lower_boundary_h) ** 2, prepone=True),
+        Constraint(identifier="pde",
+                   condition=lambda x, y: not (x == domain.x_min or y == domain.y_min or y == domain.y_max),
+                   residual=lambda input, prediction: (get_res(input, prediction)) ** 2)
     ]
 )
 
 # hyperstudy for richards => 8 hidden, with 21 neurons
 approximation_net = ApproximationNet(n_hidden_layers=8, n_neurons_per_layer=21)
+# approximation_net = ApproximationNet(n_hidden_layers=12, n_neurons_per_layer=25)
 
 approximation = Approximation(
     problem=problem,
@@ -126,7 +84,12 @@ def train_richards(pretrained_model=None):
              os.path.join(dir_path, f"trained_models/{current_model}/config.py"))
     approximation.train(
         learning_rate=1e-3,
-        epochs=int(1e5),  # 1e4 boundaries 3e4 all 1e4 random steps
+        epochs=int(1e6),  # 1e4 boundaries 3e4 all 1e4 random steps
+        # pretraining_target_loss=1e-5,  # 1e-5
+        # target_loss=1e-4,  # 1e-4
+        pretraining_patience=10000,
+        training_patience=10000,
+        checkpoint_dir_path="/ramdisk/",
         discretization=StepsDiscretization(
             x_steps=100,
             y_steps=100,
@@ -145,23 +108,47 @@ def plot_richards(trained_model=1):
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    t_space_weeks, z_space_m = \
+    t_space_hours, z_space_m = \
         np.linspace(problem.domain.x_min, problem.domain.x_max, 40), \
         np.linspace(problem.domain.y_min, problem.domain.y_max, 40)
     h_space_m = []
     for z_i, z in enumerate(z_space_m):
         h_space_m += [[]]
-        for t_i, t in enumerate(t_space_weeks):
+        for t_i, t in enumerate(t_space_hours):
             h_space_m[z_i] += [approximation.use(t, z)]
 
     # plot_x_y_z(z_space_m, t_space_h, h_space_m, xlabel="t / h", ylabel="z / m", title="Difference to SimPEG")
 
     plot_x_y_z(
-        list(map((lambda x: x * 7), t_space_weeks)),
+        list(map((lambda x: x * 60), t_space_hours)),
         list(map((lambda x: x * 100), z_space_m)),
         list(map((lambda l: list(map((lambda x: x * 100), l))), h_space_m)),
-        xlabel="Time $t$ [days]", ylabel="Depth $z$ [cm]",
+        xlabel="Time $t$ [min]", ylabel="Depth $z$ [cm]",
         title="Approximator solution for $h$ [cm]")
+
+
+def plot_richards_theta(trained_model=1):
+    load_trained_model(trained_model)
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+
+    t_space_hours, z_space_m = \
+        np.linspace(problem.domain.x_min, problem.domain.x_max, 40), \
+        np.linspace(problem.domain.y_min, problem.domain.y_max, 40)
+    theta_space = []
+    for z_i, z in enumerate(z_space_m):
+        theta_space += [[]]
+        for t_i, t in enumerate(t_space_hours):
+            theta_space[z_i] += [theta_by_h(approximation.use(t, z))]
+
+    # plot_x_y_z(z_space_m, t_space_h, h_space_m, xlabel="t / h", ylabel="z / m", title="Difference to SimPEG")
+
+    plot_x_y_z(
+        list(map((lambda x: x * 60), t_space_hours)),
+        list(map((lambda x: x * 100), z_space_m)),
+        list(map((lambda l: list(map((lambda x: x * 100), l))), theta_space)),
+        xlabel="Time $t$ [min]", ylabel="Depth $z$ [cm]",
+        title="Approximator solution for $\\Theta$ [–]")
 
 
 def plot_richards_res(trained_model=1):

@@ -22,23 +22,13 @@ domain = Domain(
 problem = Problem(
         domain,
         [
-            Constraint(
-                condition=lambda x, y: x == 0,
-                # residual=lambda x, y, prediction: (prediction - (1.02 * y - .615)) ** 2,  # linear initial conditions
-                residual=lambda x, y, prediction: (prediction - (- .615)) ** 2,  # celia initial conditions
-                identifier="initial condition"
-            ),
-            Constraint(
-                condition=lambda x, y: y == domain.y_min,
-                residual=lambda x, y, prediction: (prediction - (-.615)) ** 2,
-                identifier="lower boundary"
-            ),
-            Constraint(
-                condition=lambda x, y: y == domain.y_max and x > 0,
-                # residual=lambda x, y, prediction: (prediction - (-.207)) ** 2,
-                residual=lambda x, y, prediction: (prediction - (-.207 - .408 * torch.exp(-(x / 0.001) ** 2))) ** 2,
-                identifier="upper boundary"
-            ),
+            Constraint(identifier="initial condition", condition=lambda x, y: x == 0,
+                       residual=lambda x, y, prediction: (prediction - (- .615)) ** 2),
+            Constraint(identifier="lower boundary", condition=lambda x, y: y == domain.y_min,
+                       residual=lambda x, y, prediction: (prediction - (-.615)) ** 2),
+            Constraint(identifier="upper boundary", condition=lambda x, y: y == domain.y_max and x > 0,
+                       residual=lambda x, y, prediction: (prediction - (
+                                   -.207 - .408 * torch.exp(-(x / 0.001) ** 2))) ** 2),
             # Constraint(
             #     condition=lambda x, y: not (x == 0 or y == domain.y_min or y == domain.y_max),
             #     residual=lambda input, prediction: (get_res(input, prediction)) ** 2,

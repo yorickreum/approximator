@@ -21,12 +21,9 @@ problem = Problem(
         y_max=10
     ),
     [
-        Constraint(
-            condition=lambda x, y: x == 0,
-            residual=lambda x, y, prediction: (prediction -
-                                               (torch.sin(math.pi * y / 10))) ** 2,
-            identifier="initial condition"
-        ),
+        Constraint(identifier="initial condition", condition=lambda x, y: x == 0,
+                   residual=lambda x, y, prediction: (prediction -
+                                                      (torch.sin(math.pi * y / 10))) ** 2),
         # Constraint(
         #     condition=lambda x, y: y == 10,
         #     residual=lambda x, y, prediction: (prediction - 0) ** 2,

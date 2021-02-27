@@ -5,10 +5,23 @@ import torch
 
 
 class Constraint:
-    def __init__(self, condition: Callable, residual: callable, identifier=""):
+    def __init__(self, identifier: str, condition: Callable, residual: Callable, prepone=False):
         self.conditionf = condition
         self.__residualf = residual
         self.identifier = identifier
+        self.prepone = prepone
+
+    def __eq__(self, other):
+        # return (self.__class__ == other.__class__
+        #         and self.conditionf == other.conditionf
+        #         and self.__residualf == other.__residualf
+        #         and self.identifier == other.identifier
+        #         and self.prepone == other.prepone)
+        return (self.__class__ == other.__class__
+                and self.identifier == other.identifier)
+
+    def __hash__(self):
+        return hash(self.identifier)
 
     def residualf(self, input: torch.tensor, prediction: torch.tensor):
         sig = signature(self.__residualf)
@@ -22,3 +35,4 @@ class Constraint:
             return self.__residualf(x, y, prediction)
         else:
             raise RuntimeError("Residual function not valid.")
+

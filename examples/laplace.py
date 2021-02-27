@@ -16,18 +16,10 @@ problem = Problem(
         y_max=1
     ),
     [
-        Constraint(
-            lambda x, y: x == 0 or x == 1 or y == 0,
-            lambda x, y, prediction: (prediction - 0) ** 2
-        ),
-        Constraint(
-            lambda x, y: y == 1,
-            lambda x, y, prediction: (prediction - torch.sin(np.pi * x)) ** 2
-        ),
-        Constraint(
-            lambda x, y: not (x == 0 or x == 1 or y == 0 or y == 1),
-            lambda input, prediction: laplace(input, prediction) ** 2
-        )
+        Constraint(nope, lambda x, y: x == 0 or x == 1 or y == 0, lambda x, y, prediction: (prediction - 0) ** 2),
+        Constraint(nope, lambda x, y: y == 1, lambda x, y, prediction: (prediction - torch.sin(np.pi * x)) ** 2),
+        Constraint(nope, lambda x, y: not (x == 0 or x == 1 or y == 0 or y == 1),
+                   lambda input, prediction: laplace(input, prediction) ** 2)
     ]
 )
 

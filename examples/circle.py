@@ -19,14 +19,8 @@ problem = Problem(
         y_max=1
     ),
     [
-        Constraint(
-            lambda x, y: in_circle(x, y),
-            lambda x, y, prediction: (prediction - 1) ** 2
-        ),
-        Constraint(
-            lambda x, y: not in_circle(x, y),
-            lambda x, y, prediction: (prediction - 0) ** 2
-        )
+        Constraint(nope, lambda x, y: in_circle(x, y), lambda x, y, prediction: (prediction - 1) ** 2),
+        Constraint(nope, lambda x, y: not in_circle(x, y), lambda x, y, prediction: (prediction - 0) ** 2)
     ]
 )
 

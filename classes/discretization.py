@@ -5,7 +5,7 @@ import numpy as np
 import torch
 
 import approximator
-from approximator.classes.problem import Problem
+from approximator.classes.problem import Domain
 
 
 class Discretization(ABC):
@@ -25,7 +25,7 @@ class Discretization(ABC):
     def get_y_space(self, y_min, y_max):
         pass
 
-    def get_spaces_for_constraints(self, problem: Problem):
+    def get_spaces_for_constraints(self, domain, constraints):
         pass
 
 
@@ -35,12 +35,15 @@ class AbstractStepsDiscretization(Discretization, ABC):
         self.x_steps = x_steps
         self.y_steps = y_steps
 
-    def calc_spaces_for_constraints(self, problem):
-        constrained_spaces = []
+    def calc_spaces_for_constraints(self, domain: Domain, constraints):
+        constrained_spaces = {}
+        # x_space, y_space = \
+        #     self.get_x_space(problem.domain.x_min, problem.domain.x_max), \
+        #     self.get_y_space(problem.domain.y_min, problem.domain.y_max)
         x_space, y_space = \
-            self.get_x_space(problem.domain.x_min, problem.domain.x_max), \
-            self.get_y_space(problem.domain.y_min, problem.domain.y_max)
-        for constraint in problem.constraints:
+            self.get_x_space(domain.x_min, domain.x_max), \
+            self.get_y_space(domain.y_min, domain.y_max)
+        for constraint in constraints:  # problem.constraints(prepone_only):
             constrained_input = []
             for r in itertools.product(x_space, y_space):
                 x, y = r[0], r[1]
@@ -48,14 +51,14 @@ class AbstractStepsDiscretization(Discretization, ABC):
                     constrained_input += [[x, y]]
             if len(constrained_input) == 0:
                 raise RuntimeWarning("Constraint condition was never met in discretized domain!")
-            constrained_spaces += {torch.tensor(
+            constrained_spaces[constraint] = torch.tensor(
                 constrained_input,
                 dtype=approximator.DTYPE,
                 requires_grad=True,
-                device=approximator.DEVICE)}
+                device=approximator.DEVICE)
 
         if len(constrained_spaces) > 1:
-            intersection = set.intersection(*[set(ci) for ci in constrained_spaces])
+            intersection = set.intersection(*[set(ci) for ci in constrained_spaces.values()])
             if len(intersection) > 0:
                 raise RuntimeWarning("Multiple constraint conditions apply for at least one point, "
                                      "this can lead to unpredictable behaviour.")
@@ -67,7 +70,8 @@ class StepsDiscretization(AbstractStepsDiscretization):
         super().__init__(x_steps, y_steps, x_additional, y_additional)
         self.x_space = None
         self.y_space = None
-        self.constrained_inputs = []
+        # Cache calculated constrained inputs for speed
+        self.cached_constraints = {}
 
     @staticmethod
     def get_lin_space(min, max, steps):
@@ -83,10 +87,10 @@ class StepsDiscretization(AbstractStepsDiscretization):
             self.y_space = list({*StepsDiscretization.get_lin_space(y_min, y_max, self.y_steps), *self.y_additional})
         return self.y_space
 
-    def get_spaces_for_constraints(self, problem: Problem):
-        if len(self.constrained_inputs) == 0:
-            self.constrained_inputs = self.calc_spaces_for_constraints(problem)
-        return self.constrained_inputs
+    def get_spaces_for_constraints(self, rectangle, constraints):
+        if list(self.cached_constraints.keys()) != constraints:
+            self.cached_constraints = self.calc_spaces_for_constraints(rectangle, constraints)
+        return self.cached_constraints
 
 
 class RandomStepsDiscretization(AbstractStepsDiscretization):
@@ -100,8 +104,9 @@ class RandomStepsDiscretization(AbstractStepsDiscretization):
     def get_y_space(self, y_min, y_max):
         return list({*RandomStepsDiscretization.get_random_space(y_min, y_max, self.y_steps), *self.y_additional})
 
-    def get_spaces_for_constraints(self, problem: Problem):
-        return self.calc_spaces_for_constraints(problem)
+    # def get_spaces_for_constraints(self, problem: Problem, prepone_only=False):
+    def get_spaces_for_constraints(self, rectangle, constraints):
+        return self.calc_spaces_for_constraints(rectangle, constraints)
 
 
 class StepSizeDiscretization(Discretization):

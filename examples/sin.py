@@ -14,10 +14,7 @@ problem = Problem(
         y_max=1
     ),
     [
-        Constraint(
-            lambda x, y: True,
-            lambda x, y, prediction: (prediction - torch.sin(x) * torch.cos(y)) ** 2
-        )
+        Constraint(nope, lambda x, y: True, lambda x, y, prediction: (prediction - torch.sin(x) * torch.cos(y)) ** 2)
     ]
 )
 

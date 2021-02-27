@@ -21,27 +21,15 @@ problem = Problem(
         y_max=.5
     ),
     [
-        Constraint(
-            condition=lambda x, y: x == 0,
-            residual=lambda x, y, prediction: (prediction -
-                                               (torch.sin(math.pi * y + math.pi / 2))) ** 2,
-            identifier="initial condition"
-        ),
-        Constraint(
-            condition=lambda x, y: y == -.5,
-            residual=lambda x, y, prediction: (prediction - 0) ** 2,
-            identifier="upper boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: y == +.5,
-            residual=lambda x, y, prediction: (prediction - 0) ** 2,
-            identifier="lower boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: not (x == 0 or y == 10 or y == 0),
-            residual=lambda input, prediction: (get_res(input, prediction)) ** 2,
-            identifier="pde"
-        )
+        Constraint(identifier="initial condition", condition=lambda x, y: x == 0,
+                   residual=lambda x, y, prediction: (prediction -
+                                                      (torch.sin(math.pi * y + math.pi / 2))) ** 2),
+        Constraint(identifier="upper boundary", condition=lambda x, y: y == -.5,
+                   residual=lambda x, y, prediction: (prediction - 0) ** 2),
+        Constraint(identifier="lower boundary", condition=lambda x, y: y == +.5,
+                   residual=lambda x, y, prediction: (prediction - 0) ** 2),
+        Constraint(identifier="pde", condition=lambda x, y: not (x == 0 or y == 10 or y == 0),
+                   residual=lambda input, prediction: (get_res(input, prediction)) ** 2)
     ]
 )
 

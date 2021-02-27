@@ -16,22 +16,11 @@ problem = Problem(
         y_max=40  # attention: in SimPEG this is probably 39?
     ),
     [
-        Constraint(
-            lambda x, y: x == 0,
-            lambda x, y, prediction: (prediction - (1.02 * y - 61.5)) ** 2  # linear starting conditions
-        ),
-        Constraint(
-            lambda x, y: y == 40,
-            lambda x, y, prediction: (prediction + 20.7) ** 2
-        ),
-        Constraint(
-            lambda x, y: y == 0,
-            lambda x, y, prediction: (prediction + 61.5) ** 2
-        ),
-        Constraint(
-            lambda x, y: not (x == 0 or y == 40 or y == 0),
-            lambda input, prediction: get_res(input, prediction) ** 2
-        )
+        Constraint(nope, lambda x, y: x == 0, lambda x, y, prediction: (prediction - (1.02 * y - 61.5)) ** 2),
+        Constraint(nope, lambda x, y: y == 40, lambda x, y, prediction: (prediction + 20.7) ** 2),
+        Constraint(nope, lambda x, y: y == 0, lambda x, y, prediction: (prediction + 61.5) ** 2),
+        Constraint(nope, lambda x, y: not (x == 0 or y == 40 or y == 0),
+                   lambda input, prediction: get_res(input, prediction) ** 2)
     ]
 )
 

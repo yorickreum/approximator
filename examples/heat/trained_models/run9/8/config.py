@@ -21,26 +21,14 @@ problem = Problem(
         y_max=10
     ),
     [
-        Constraint(
-            condition=lambda x, y: x == 0,
-            residual=lambda x, y, prediction: torch.abs(prediction - (torch.sin(math.pi * y / 10))),
-            identifier="initial condition"
-        ),
-        Constraint(
-            condition=lambda x, y: y == 10,
-            residual=lambda x, y, prediction: torch.abs(prediction - 0),
-            identifier="upper boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: y == 0,
-            residual=lambda x, y, prediction: torch.abs(prediction - 0),
-            identifier="lower boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: not (x == 0 or y == 10 or y == 0),
-            residual=lambda input, prediction: torch.abs(get_res(input, prediction)),
-            identifier="pde"
-        )
+        Constraint(identifier="initial condition", condition=lambda x, y: x == 0,
+                   residual=lambda x, y, prediction: torch.abs(prediction - (torch.sin(math.pi * y / 10)))),
+        Constraint(identifier="upper boundary", condition=lambda x, y: y == 10,
+                   residual=lambda x, y, prediction: torch.abs(prediction - 0)),
+        Constraint(identifier="lower boundary", condition=lambda x, y: y == 0,
+                   residual=lambda x, y, prediction: torch.abs(prediction - 0)),
+        Constraint(identifier="pde", condition=lambda x, y: not (x == 0 or y == 10 or y == 0),
+                   residual=lambda input, prediction: torch.abs(get_res(input, prediction)))
     ]
 )
 

@@ -24,28 +24,19 @@ domain = Domain(
 problem = Problem(
     domain,
     [
-        Constraint(
-            condition=lambda x, y: x == 0,
-            # residual=lambda x, y, prediction: (prediction - (1.02 * y - .615)) ** 2,  # linear initial conditions
-            residual=lambda x, y, prediction: (prediction - (- .615)) ** 2,  # celia initial conditions
-            identifier="initial condition"
-        ),
-        Constraint(
-            condition=lambda x, y: y == domain.y_min,
-            residual=lambda x, y, prediction: (prediction - (-.615)) ** 2,
-            identifier="lower boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: y == domain.y_max,
-            # residual=lambda x, y, prediction: (prediction - (-.207)) ** 2,
-            residual=lambda x, y, prediction: (prediction - (-.207 - .408 * torch.exp(-(x / 0.0001) ** 2))) ** 2,
-            identifier="upper boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: not (x == 0 or y == domain.y_min or y == domain.y_max),
-            residual=lambda input, prediction: (get_res(input, prediction)) ** 2,
-            identifier="pde"
-        )
+        Constraint(identifier="initial condition", condition=lambda x, y: x == 0,
+                   prepone=True,
+                   residual=lambda x, y, prediction: (prediction - (- .615)) ** 2),
+        Constraint(identifier="lower boundary", condition=lambda x, y: y == domain.y_min,
+                   prepone=True,
+                   residual=lambda x, y, prediction: (prediction - (-.615)) ** 2),
+        Constraint(identifier="upper boundary", condition=lambda x, y: y == domain.y_max,
+                   prepone=True,
+                   residual=lambda x, y, prediction: (prediction - (
+                               -.207 - .408 * torch.exp(-(x / 0.0001) ** 2))) ** 2),
+        Constraint(identifier="pde", condition=lambda x, y: not (x == 0 or y == domain.y_min or y == domain.y_max),
+                   prepone=False,
+                   residual=lambda input, prediction: (get_res(input, prediction)) ** 2)
     ]
 )
 
@@ -78,7 +69,10 @@ def train_richards(pretrained_model=None):
              os.path.join(dir_path, f"trained_models/{current_model}/config.py"))
     approximation.train(
         learning_rate=1e-3,
-        epochs=int(1e5),  # 1e4 boundaries 3e4 all 1e4 random steps
+        epochs=int(1e6),  # 1e4 boundaries 3e4 all 1e4 random steps
+        pretraining_patience=int(1e5),
+        training_patience=int(5e4),
+        checkpoint_dir_path="/ramdisk",
         discretization=StepsDiscretization(
             x_steps=100,
             y_steps=100,

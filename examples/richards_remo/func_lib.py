@@ -1,4 +1,7 @@
+import os
+
 import torch
+import numpy as np
 
 import approximator
 
@@ -18,11 +21,21 @@ import approximator
 # K_sat = (7 * 24 * 60 * 60) * K_sat_ms  # [m/week]
 
 # layer 2:
-b = 3.9564855  # bclapp = clapp-hornberger-parameter [-]
-theta_sat = 0.4165416  # vpor = pore volume [m/m]
-h_sat = -0.07915318  # fmpot = saturated matric potential [m]
-K_sat_ms = 0.013824694  # fksat = saturated hydraulic conductivity [m/s]
-K_sat = (7 * 24 * 60 * 60) * K_sat_ms  # [m/week]
+# b = 3.9564855  # bclapp = clapp-hornberger-parameter [-]
+# theta_sat = 0.4165416  # vpor = pore volume [m/m]
+# h_sat = -0.07915318  # fmpot = saturated matric potential [m]
+# K_sat_ms = 0.013824694  # fksat = saturated hydraulic conductivity [m/s]
+# K_sat = (7 * 24 * 60 * 60) * K_sat_ms  # [m/week]
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+setups = np.genfromtxt(os.path.join(dir_path, f'./setups.csv'), delimiter=',')
+res_layer_2_theta_t0, res_layer_2_theta_t1, res_layer_1_theta_t0, res_layer_3_theta_t0, res_layer_2_theta_s, res_layer_2_h_s, res_layer_2_bclapp, res_layer_2_K_s = setups
+
+b = res_layer_2_bclapp  # bclapp = clapp-hornberger-parameter [-]
+theta_sat = res_layer_2_theta_s  # vpor = pore volume [m/m]
+h_sat = res_layer_2_h_s  # fmpot = saturated matric potential [m] # @TODO SIGN? - ?
+K_sat_ms = res_layer_2_K_s  # fksat = saturated hydraulic conductivity [m/s]
+K_sat = (60 * 60) * K_sat_ms  # [m/hour]
 
 
 def theta_by_h(h: torch.tensor):  # Campbell (1974), h ist psi
@@ -31,6 +44,11 @@ def theta_by_h(h: torch.tensor):  # Campbell (1974), h ist psi
 
 def h_by_theta(theta: torch.tensor):  # Campbell (1974), h ist psi, inverse function
     return h_sat * (theta / theta_sat) ** (-b)
+
+
+upper_boundary_h = h_by_theta(res_layer_1_theta_t0)
+lower_boundary_h = h_by_theta(res_layer_3_theta_t0)
+initial_h = h_by_theta(res_layer_2_theta_t0)
 
 
 def K(theta: torch.tensor):  # Campbell (1974)

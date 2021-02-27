@@ -20,26 +20,14 @@ problem = Problem(
         y_max=.4
     ),
     [
-        Constraint(
-            condition=lambda x, y: x == 0,
-            residual=lambda x, y, prediction: (prediction - (1.02 * y - .615)) ** 2,  # linear starting conditions
-            identifier="initial condition"
-        ),
-        Constraint(
-            condition=lambda x, y: y == 0,
-            residual=lambda x, y, prediction: (prediction - (-.615)) ** 2,
-            identifier="upper boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: y == .4,
-            residual=lambda x, y, prediction: (prediction - (-.207)) ** 2,
-            identifier="lower boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: not (x == 0 or y == 0 or y == .4),
-            residual=lambda input, prediction: (get_res(input, prediction)) ** 2,
-            identifier="pde"
-        )
+        Constraint(identifier="initial condition", condition=lambda x, y: x == 0,
+                   residual=lambda x, y, prediction: (prediction - (1.02 * y - .615)) ** 2),
+        Constraint(identifier="upper boundary", condition=lambda x, y: y == 0,
+                   residual=lambda x, y, prediction: (prediction - (-.615)) ** 2),
+        Constraint(identifier="lower boundary", condition=lambda x, y: y == .4,
+                   residual=lambda x, y, prediction: (prediction - (-.207)) ** 2),
+        Constraint(identifier="pde", condition=lambda x, y: not (x == 0 or y == 0 or y == .4),
+                   residual=lambda input, prediction: (get_res(input, prediction)) ** 2)
     ]
 )
 

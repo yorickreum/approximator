@@ -14,4 +14,10 @@ class Domain:
 class Problem:
     def __init__(self, domain: Domain, constraints: List[Constraint]):
         self.domain = domain
-        self.constraints = constraints
+        constraint_identifiers = [c.identifier for c in constraints]
+        if len(set(constraint_identifiers)) != len(constraint_identifiers):
+            raise RuntimeError("Duplicated constraint identifier detected!")
+        self._constraints = constraints
+
+    def constraints(self, prepone_only=False):
+        return [c for c in self._constraints if (prepone_only == False) or (c.prepone == True)]

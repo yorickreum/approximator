@@ -9,7 +9,7 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 # constants
-DTYPE = torch.float64  # convergence seems to be faster with float64
+DTYPE = torch.float64  # convergence seems to be faster with float64, but more stable with float32? more accuracy with float64?
 # LOGSTEPS = 1
 
 if torch.cuda.is_available():
@@ -18,7 +18,7 @@ else:
     DEVICE = torch.device('cpu')
 
 # print more digits, especially for loss
-torch.set_printoptions(precision=5, sci_mode=True)
+torch.set_printoptions(precision=8, sci_mode=True)
 
 # reproducibility
 # seed = 42

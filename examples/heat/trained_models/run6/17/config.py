@@ -21,26 +21,14 @@ problem = Problem(
         y_max=40  # attention: in SimPEG this is probably 39?
     ),
     [
-        Constraint(
-            condition=lambda x, y: x == 0,
-            residual=lambda x, y, prediction: (prediction - (torch.sin(math.pi * y / 40))) ** 2,
-            identifier="initial condition"
-        ),
-        Constraint(
-            condition=lambda x, y: y == 40,
-            residual=lambda x, y, prediction: (prediction - 0) ** 2,
-            identifier="upper boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: y == 0,
-            residual=lambda x, y, prediction: (prediction - 0) ** 2,
-            identifier="lower boundary"
-        ),
-        Constraint(
-            condition=lambda x, y: not (x == 0 or y == 40 or y == 0),
-            residual=lambda input, prediction: get_res(input, prediction) ** 2,
-            identifier="pde"
-        )
+        Constraint(identifier="initial condition", condition=lambda x, y: x == 0,
+                   residual=lambda x, y, prediction: (prediction - (torch.sin(math.pi * y / 40))) ** 2),
+        Constraint(identifier="upper boundary", condition=lambda x, y: y == 40,
+                   residual=lambda x, y, prediction: (prediction - 0) ** 2),
+        Constraint(identifier="lower boundary", condition=lambda x, y: y == 0,
+                   residual=lambda x, y, prediction: (prediction - 0) ** 2),
+        Constraint(identifier="pde", condition=lambda x, y: not (x == 0 or y == 40 or y == 0),
+                   residual=lambda input, prediction: get_res(input, prediction) ** 2)
     ]
 )
 
