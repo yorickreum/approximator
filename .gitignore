@@ -10,3 +10,4 @@ __pycache__
 *.yaml
 *old*
 examples/*/hyperstudy/trials/*
+examples/heat/results-thesis/example-run/heat-3/
