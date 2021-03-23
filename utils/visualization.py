@@ -12,7 +12,7 @@ plt.ioff()
 
 def plot_x_y_z(x_space, y_space, z_space,
                xlabel="x", ylabel="y", title="",
-               dir_path="./run/", show=True):
+               dir_path=None, show=True):
     z_resolution = 100  # contours
 
     plt.rcParams.update({'font.size': 14})
@@ -35,8 +35,9 @@ def plot_x_y_z(x_space, y_space, z_space,
         .replace(" ", "_") \
         .replace("$", "") \
         .replace("[", "").replace("]", "")
-    plt.savefig(os.path.join(dir_path, f'plt_{sanitized_title}.pdf'))
-    plt.savefig(os.path.join(dir_path, f'plt_{sanitized_title}.png'))
+    if dir_path is not None:
+        plt.savefig(os.path.join(dir_path, f'plt_{sanitized_title}.pdf'))
+        plt.savefig(os.path.join(dir_path, f'plt_{sanitized_title}.png'))
     if show:
         plt.show()
     else:
@@ -45,7 +46,7 @@ def plot_x_y_z(x_space, y_space, z_space,
 
 def plot_domain(approximation: Approximation, func: Callable,
                 xlabel="x", ylabel="y", title="",
-                dir_path="./run/", show=True):
+                dir_path=None, show=True):
     problem = approximation.problem
 
     x_resolution = 100
@@ -63,12 +64,12 @@ def plot_domain(approximation: Approximation, func: Callable,
     plot_x_y_z(x_space, y_space, z_space, xlabel, ylabel, title, dir_path, show)
 
 
-def plot_approximation(approximation: Approximation, xlabel="x", ylabel="y", title="", dir_path="./run/", show=True):
+def plot_approximation(approximation: Approximation, xlabel="x", ylabel="y", title="", dir_path=None, show=True):
     plot_domain(approximation, approximation.use, xlabel=xlabel, ylabel=ylabel, title=title, dir_path=dir_path,
                 show=show)
 
 
-def plot_approximation_residuals(approximation: Approximation, xlabel="x", ylabel="y", title="", dir_path="./run/",
+def plot_approximation_residuals(approximation: Approximation, xlabel="x", ylabel="y", title="", dir_path=None,
                                  show=True):
     plot_domain(approximation, approximation.res, xlabel=xlabel, ylabel=ylabel, title=title, dir_path=dir_path,
                 show=show)
@@ -76,7 +77,7 @@ def plot_approximation_residuals(approximation: Approximation, xlabel="x", ylabe
 
 def plot_approximation_deviation(approximation: Approximation, ref_func: Callable,
                                  xlabel="x", ylabel="y", title="",
-                                 dir_path="./run/", show=True):
+                                 dir_path=None, show=True):
     def deviation(x, y):
         # try:
         #     return (approximation.use(x, y) / ref_func(x, y)) - 1
