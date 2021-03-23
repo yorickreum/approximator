@@ -5,6 +5,7 @@ import approximator
 from approximator.classes.approximation import Approximation
 from approximator.classes.discretization import Discretization, StepsDiscretization
 from approximator.classes.constraint import Constraint
+from approximator.classes.net import ApproximationNet
 from approximator.classes.problem import Problem, Domain
 from approximator.utils.visualization import plot_approximation
 
@@ -16,23 +17,18 @@ problem = Problem(
         y_max=1
     ),
     [
-        Constraint(nope, lambda x, y: 1 >= x >= 0 == y,
+        Constraint("Boundaries", lambda x, y: 1 >= x >= 0 == y,
                    lambda x, y, prediction: (prediction - (x ** 2 + torch.exp(- x ** 2))) ** 2),
-        Constraint(nope, lambda x, y: not (1 >= x >= 0 == y),
+        Constraint("PDE", lambda x, y: not (1 >= x >= 0 == y),
                    lambda input, prediction: conservation(input, prediction) ** 2)
     ]
 )
 
+approximation_net = ApproximationNet(n_hidden_layers=5, n_neurons_per_layer=10)
+
 approximation = Approximation(
     problem=problem,
-    discretization=StepsDiscretization(
-        x_steps=100,
-        y_steps=100
-    ),
-    n_hidden_layers=5,
-    n_neurons_per_layer=10,
-    learning_rate=.001,
-    epochs=int(1e3)
+    net=approximation_net
 )
 
 
@@ -53,6 +49,16 @@ def conservation(input, prediction):
 
 
 def plot_conservation():
-    approximation.train()
+    approximation.train(
+        discretization=StepsDiscretization(
+            x_steps=100,
+            y_steps=100
+        ),
+        learning_rate=.001,
+        epochs=int(1e3)
+    )
     print('quick check result:' + str(approximation.use(.5, .5)))
     plot_approximation(approximation)
+
+
+plot_conservation()

@@ -5,16 +5,8 @@ import approximator
 
 
 class ApproximationNet(nn.Module):
-    r""" Default approximation network """
-    # optimizer = None
-    # losses = []
-    # pde_loss = []
-    # bc_top_losses = []
-    # bc_bottom_losses = []
-    # bc_initial_losses = []
+    r""" Default approximation network (MLP) """
 
-    # net input 1 = tbc_initial_losses
-    # net input 2 = z
     def __init__(self, n_hidden_layers, n_neurons_per_layer, device=approximator.DEVICE):
         super(ApproximationNet, self).__init__()
         self.device = device
@@ -35,7 +27,6 @@ class ApproximationNet(nn.Module):
         # torch.nn.init.xavier_normal_(self.predict.weight)
 
     def forward(self, x):
-        # @TODO check / maybe change sign of tanh
         x = self.hidden1(x)
         # no activation function for first hidden layer to avoid problems if x is not normalized
         for layer in self.hidden_layers:

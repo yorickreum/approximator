@@ -1,10 +1,11 @@
-import torch
 import numpy as np
+import torch
 
 import approximator
 from approximator.classes.approximation import Approximation
-from approximator.classes.discretization import Discretization, StepsDiscretization
 from approximator.classes.constraint import Constraint
+from approximator.classes.discretization import StepsDiscretization
+from approximator.classes.net import ApproximationNet
 from approximator.classes.problem import Problem, Domain
 from approximator.utils.visualization import plot_approximation
 
@@ -16,23 +17,26 @@ problem = Problem(
         y_max=1
     ),
     [
-        Constraint(nope, lambda x, y: x == 0 or x == 1 or y == 0, lambda x, y, prediction: (prediction - 0) ** 2),
-        Constraint(nope, lambda x, y: y == 1, lambda x, y, prediction: (prediction - torch.sin(np.pi * x)) ** 2),
-        Constraint(nope, lambda x, y: not (x == 0 or x == 1 or y == 0 or y == 1),
-                   lambda input, prediction: laplace(input, prediction) ** 2)
+        Constraint("Flat boundary",
+                   lambda x, y: x == 0 or x == 1 or y == 0,
+                   lambda x, y, prediction: (prediction - 0) ** 2,
+                   prepone=True),
+        Constraint("Sin boundary",
+                   lambda x, y: y == 1,
+                   lambda x, y, prediction: (prediction - torch.sin(np.pi * x)) ** 2,
+                   prepone=True),
+        Constraint("PDE",
+                   lambda x, y: not (x == 0 or x == 1 or y == 0 or y == 1),
+                   lambda input, prediction: laplace(input, prediction) ** 2,
+                   prepone=False)
     ]
 )
 
+approximation_net = ApproximationNet(n_hidden_layers=5, n_neurons_per_layer=10)
+
 approximation = Approximation(
     problem=problem,
-    discretization=StepsDiscretization(
-        x_steps=40,
-        y_steps=40
-    ),
-    n_hidden_layers=5,
-    n_neurons_per_layer=10,
-    learning_rate=.001,
-    epochs=int(1e4)
+    net=approximation_net
 )
 
 
@@ -55,6 +59,17 @@ def laplace(input, prediction):
 
 
 def plot_laplace():
-    approximation.train()
+    approximation.train(
+        discretization=StepsDiscretization(
+            x_steps=40,
+            y_steps=40
+        ),
+        learning_rate=.001,
+        epochs=int(5e3),
+        pretraining_target_loss=.01
+    )
     print('quick check result:' + str(approximation.use(.5, .5)))
     plot_approximation(approximation)
+
+
+plot_laplace()

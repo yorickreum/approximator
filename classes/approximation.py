@@ -80,15 +80,16 @@ class Approximation:
                 if torch.isnan(loss):  # @TODO handle NaN
                     raise RuntimeError("NaN loss encountered!")
 
-                if (not self.pretraining_done) and pretraining_only:
-                    if (self.pretraining_best_loss is None) or (loss.item() < self.pretraining_best_loss):
-                        self.pretraining_best_loss = loss.item()
-                        self.pretraining_best_loss_epoch = i
+                if checkpoint_dir_path is not None:
+                    if (not self.pretraining_done) and pretraining_only:
+                        if (self.pretraining_best_loss is None) or (loss.item() < self.pretraining_best_loss):
+                            self.pretraining_best_loss = loss.item()
+                            self.pretraining_best_loss_epoch = i
+                            self._save_model_checkpoint(checkpoint_dir_path)
+                    elif (self.training_best_loss is None) or (loss.item() < self.training_best_loss):
+                        self.training_best_loss = loss.item()
+                        self.training_best_loss_epoch = i
                         self._save_model_checkpoint(checkpoint_dir_path)
-                elif (self.training_best_loss is None) or (loss.item() < self.training_best_loss):
-                    self.training_best_loss = loss.item()
-                    self.training_best_loss_epoch = i
-                    self._save_model_checkpoint(checkpoint_dir_path)
 
                 # check if has converged, break early
                 # via target loss
@@ -97,7 +98,7 @@ class Approximation:
                         (loss.item() < target_loss):
                     break
                 # via patience
-                elif (training_patience is not None) and (self.training_best_loss is not None):
+                elif (checkpoint_dir_path is not None) and (training_patience is not None) and (self.training_best_loss is not None):
                     is_training_patience_over = (i - self.training_best_loss_epoch) > training_patience
                     if is_training_patience_over:
                         self._load_model_checkpoint(checkpoint_dir_path)
@@ -105,9 +106,13 @@ class Approximation:
                         break
                 # via maximum number of epochs
                 elif (i + 1) == epochs:
-                    self._load_model_checkpoint(checkpoint_dir_path)
-                    print(
-                        f"Maximum number of epochs reached, best checkpoint model with loss {self.training_best_loss} loaded.")
+                    if checkpoint_dir_path is not None:
+                        self._load_model_checkpoint(checkpoint_dir_path)
+                        print(
+                            f"Maximum number of epochs reached, best checkpoint model with loss {self.training_best_loss} loaded.")
+                    else:
+                        print(
+                            f"Maximum number of epochs reached, ending.")
         except KeyboardInterrupt:
             pass
 

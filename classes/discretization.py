@@ -114,6 +114,8 @@ class StepSizeDiscretization(Discretization):
         super().__init__(x_additional=x_additional, y_additional=y_additional)
         self.x_step = x_step
         self.y_step = y_step
+        # Cache calculated constrained inputs for speed
+        self.cached_constraints = {}
 
     @staticmethod
     def get_arranged_space(min, max, step):
@@ -124,3 +126,37 @@ class StepSizeDiscretization(Discretization):
 
     def get_y_space(self, y_min, y_max):
         return list({*StepSizeDiscretization.get_arranged_space(y_min, y_max, self.y_step), *self.y_additional})
+
+    def calc_spaces_for_constraints(self, domain: Domain, constraints):
+        constrained_spaces = {}
+        # x_space, y_space = \
+        #     self.get_x_space(problem.domain.x_min, problem.domain.x_max), \
+        #     self.get_y_space(problem.domain.y_min, problem.domain.y_max)
+        x_space, y_space = \
+            self.get_x_space(domain.x_min, domain.x_max), \
+            self.get_y_space(domain.y_min, domain.y_max)
+        for constraint in constraints:  # problem.constraints(prepone_only):
+            constrained_input = []
+            for r in itertools.product(x_space, y_space):
+                x, y = r[0], r[1]
+                if constraint.conditionf(x, y):
+                    constrained_input += [[x, y]]
+            if len(constrained_input) == 0:
+                raise RuntimeWarning("Constraint condition was never met in discretized domain!")
+            constrained_spaces[constraint] = torch.tensor(
+                constrained_input,
+                dtype=approximator.DTYPE,
+                requires_grad=True,
+                device=approximator.DEVICE)
+
+        if len(constrained_spaces) > 1:
+            intersection = set.intersection(*[set(ci) for ci in constrained_spaces.values()])
+            if len(intersection) > 0:
+                raise RuntimeWarning("Multiple constraint conditions apply for at least one point, "
+                                     "this can lead to unpredictable behaviour.")
+        return constrained_spaces
+
+    def get_spaces_for_constraints(self, rectangle, constraints):
+        if list(self.cached_constraints.keys()) != constraints:
+            self.cached_constraints = self.calc_spaces_for_constraints(rectangle, constraints)
+        return self.cached_constraints
