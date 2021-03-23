@@ -1,0 +1,2 @@
+,number,value,datetime_start,datetime_complete,duration,params_n_hidden_layers,params_n_neurons_per_layer,params_x_steps,params_y_steps,state
+0,0,0.020981718532593285,2020-08-22 00:06:00.213543,2020-08-22 00:11:09.498526,0 days 00:05:09.284983000,14,39,73,20,COMPLETE

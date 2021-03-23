@@ -7,4 +7,6 @@ run*
 *.sh
 __pycache__
 .DS_Store
-examples/
+*.yaml
+*old*
+examples/*/hyperstudy/trials/*
