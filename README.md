@@ -1,7 +1,8 @@
 # Approximator
 
-Uses PyTorch to approximate arbitrary functions (currently from 2D to 1D) by giving a domain and one or multiple residuals for (parts of) the domain.
+A tool to use neural networks to approximate arbitrary functions (currently from 2D to 1D) by giving a domain and one or multiple residuals for (parts of) the domain.
 Can be used especially for the approximation of partial differential equations.
+Based on [PyTorch](https://github.com/pytorch/pytorch).
 
 ## Examples (in `examples`)
 ### Sinus
