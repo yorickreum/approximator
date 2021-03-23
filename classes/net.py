@@ -5,16 +5,15 @@ import approximator
 
 
 class ApproximationNet(nn.Module):
-    r""" Network to calculate pressure head h
-     and hereby solve RRE """
+    r""" Default approximation network """
     # optimizer = None
-    losses = []
-    pde_loss = []
-    bc_top_losses = []
-    bc_bottom_losses = []
-    bc_initial_losses = []
+    # losses = []
+    # pde_loss = []
+    # bc_top_losses = []
+    # bc_bottom_losses = []
+    # bc_initial_losses = []
 
-    # net input 1 = t
+    # net input 1 = tbc_initial_losses
     # net input 2 = z
     def __init__(self, n_hidden_layers, n_neurons_per_layer, device=approximator.DEVICE):
         super(ApproximationNet, self).__init__()

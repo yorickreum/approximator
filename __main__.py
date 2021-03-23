@@ -24,24 +24,25 @@
 # richards_hyperstudy()
 
 
-# from approximator.examples.heat.heat import plot_heat_direct_difference, train_heat, calculate_accuracy, plot_heat, \
+#from approximator.examples.heat.heat import plot_heat_direct_difference, train_heat, calculate_accuracy, plot_heat, \
 #     plot_heat_res, plot_heat_difference
+# from approximator.examples.heat.hyperstudy.hyperstudy import heat_hyperstudy
 #
-# last_model = 3
-# # train_heat(last_model)
+# last_model = None
+# train_heat(last_model)
 # # last_model = last_model + 1
 # plot_heat(last_model)
 # plot_heat_res(last_model)
 # plot_heat_difference(last_model)
 # plot_heat_direct_difference(last_model)
 # calculate_accuracy(last_model)
-# # heat_hyperstudy()
+# heat_hyperstudy()
 
 
-from approximator.examples.richards.richards import train_richards
+# from approximator.examples.richards.richards import train_richards
 
-last_model = None
-train_richards(last_model)
+# last_model = None
+# train_richards(last_model)
 # plot_richards(last_model)
 # plot_richards_theta(last_model)
 # plot_richards_res(last_model)

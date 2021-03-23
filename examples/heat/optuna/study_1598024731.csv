@@ -1,3 +1,0 @@
-,number,value,datetime_start,datetime_complete,duration,params_n_hidden_layers,params_n_neurons_per_layer,state
-0,0,0.0043222105079964695,2020-08-21 15:42:31.587019,2020-08-21 15:43:18.251351,0 days 00:00:46.664332000,9,40,COMPLETE
-1,1,0.016640364995133203,2020-08-21 15:43:18.252132,2020-08-21 15:45:31.819059,0 days 00:02:13.566927000,28,38,COMPLETE

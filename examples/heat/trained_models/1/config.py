@@ -55,14 +55,14 @@ def train_heat(pretrained_model=None):
              os.path.join(dir_path, f"trained_models/{current_model}/config.py"))
     approximation.train(
         learning_rate=1e-3,
-        epochs=int(1e4),
+        epochs=int(5e4),
         discretization=StepsDiscretization(
             x_steps=100,
             y_steps=200,
             x_additional=[0],
             y_additional=[-1, 1],
         ),
-        verbose_output=False
+        verbose_output=True
     )
     print('quick check result:')
     print([str(approximation.use(0, (z / 10) - 1)) for z in range(21)])

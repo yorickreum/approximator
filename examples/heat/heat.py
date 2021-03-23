@@ -1,5 +1,7 @@
 import math
 import os
+import time
+from pathlib import Path
 from shutil import copyfile
 
 import torch
@@ -24,13 +26,17 @@ problem = Problem(
     ),
     [
         Constraint(identifier="initial condition", condition=lambda x, y: x == 0,
+                   prepone=True,
                    residual=lambda x, y, prediction: (prediction -
                                                       (torch.sin(math.pi * y / 2 + math.pi / 2))) ** 2),
         Constraint(identifier="upper boundary", condition=lambda x, y: y == -1,
+                   prepone=True,
                    residual=lambda x, y, prediction: (prediction - 0) ** 2),
         Constraint(identifier="lower boundary", condition=lambda x, y: y == +1,
+                   prepone=True,
                    residual=lambda x, y, prediction: (prediction - 0) ** 2),
         Constraint(identifier="pde", condition=lambda x, y: not (x == 0 or y == -1 or y == +1),
+                   prepone=False,
                    residual=lambda input, prediction: (get_res(input, prediction)) ** 2)
     ]
 )
@@ -44,18 +50,26 @@ approximation = Approximation(
 
 
 def train_heat(pretrained_model=None):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
+    dir_path = Path(os.path.dirname(os.path.realpath(__file__)))
+    config_identifier = os.environ['CONFIGIDENTIFIER']
     if pretrained_model is None:
         current_model = 1
     else:
         current_model = pretrained_model + 1
         approximation.load(os.path.join(dir_path, f"trained_models/{pretrained_model}/net.pt"))
-    os.mkdir(os.path.join(dir_path, f"trained_models/{current_model}/"))
+    trained_model_dirpath = Path(f"trained_models/{config_identifier}/{current_model}/")
+    dir_path.joinpath(trained_model_dirpath).mkdir(parents=True, exist_ok=True)
     copyfile(os.path.join(dir_path, f"heat.py"),
-             os.path.join(dir_path, f"trained_models/{current_model}/config.py"))
+             os.path.join(dir_path, trained_model_dirpath, f"config_heat.py"))
+    copyfile(os.path.join(dir_path, f"func_lib.py"),
+             os.path.join(dir_path, trained_model_dirpath, f"config_func_lib.py"))
+    time_start = int(time.time() * 1000)
     approximation.train(
         learning_rate=1e-3,
-        epochs=int(5e4),
+        epochs=int(1e7),
+        pretraining_patience=int(5e4),
+        training_patience=int(5e4),
+        checkpoint_dir_path="/ramdisk",
         discretization=StepsDiscretization(
             x_steps=100,
             y_steps=200,
@@ -64,9 +78,37 @@ def train_heat(pretrained_model=None):
         ),
         verbose_output=True
     )
+    time_end = int(time.time() * 1000)
     print('quick check result:')
     print([str(approximation.use(0, (z / 10) - 1)) for z in range(21)])
-    copyfile(f"./run/net.pt", os.path.join(dir_path, f"trained_models/{current_model}/net.pt"))
+    copyfile(f"./run/net.pt", os.path.join(dir_path, trained_model_dirpath, f"net.pt"))
+    training_summary = np.array([np.concatenate([
+        [time_start],
+        [time_end],
+        [approximation.pretraining_best_loss if not (approximation.pretraining_best_loss is None) else float('nan')],
+        [approximation.pretraining_best_loss_epoch if not (approximation.pretraining_best_loss_epoch is None) else -1],
+        [approximation.training_best_loss if not (approximation.training_best_loss is None) else float('nan')],
+        [approximation.training_best_loss_epoch if not (approximation.training_best_loss_epoch is None) else -1],
+        [t.item() for t in approximation.latest_residuals]
+    ]).ravel()])
+    np.savetxt(
+        os.path.join(dir_path, trained_model_dirpath, f"training.csv"),
+        training_summary,
+        delimiter=",",
+        fmt=(",".join(np.concatenate([
+            ["%.i", "%.i"],
+            ["%.18e", "%.i"],
+            ["%.18e", "%.i"],
+            ["%.18e" for _ in approximation.latest_residuals]
+        ]).ravel())),
+        header=(",".join(np.concatenate([
+            ["time start", "time end"],
+            ["pretraining best loss", "pretraining best loss epoch"],
+            ["training best loss", "training best loss epoch"],
+            ["residual " + str(index + 1) for index, _ in
+             enumerate(approximation.latest_residuals)]
+        ])))
+    )
 
 
 def plot_heat(trained_model=1):

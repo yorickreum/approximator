@@ -4,6 +4,8 @@ import time
 import torch
 from torch import nn
 
+import numpy as np
+
 import approximator
 from approximator.classes.discretization import Discretization
 from approximator.classes.problem import Problem
@@ -30,6 +32,8 @@ class Approximation:
               pretraining_patience=None,
               training_patience=None,
               checkpoint_dir_path=None,
+              model_path=None,
+              losses_path=None,
               verbose_output=True):
         parameters = self.net.parameters()
         optimizer = torch.optim.Adam(parameters, lr=learning_rate)
@@ -99,12 +103,20 @@ class Approximation:
                         self._load_model_checkpoint(checkpoint_dir_path)
                         print(f"Patience exceeded, best checkpoint model with loss {self.training_best_loss} loaded.")
                         break
+                # via maximum number of epochs
+                elif (i + 1) == epochs:
+                    self._load_model_checkpoint(checkpoint_dir_path)
+                    print(
+                        f"Maximum number of epochs reached, best checkpoint model with loss {self.training_best_loss} loaded.")
         except KeyboardInterrupt:
             pass
 
         end_epoches = time.time()
 
-        torch.save(self.net, f"./run/net.pt")
+        if model_path is not None:
+            torch.save(self.net, model_path)
+        if losses_path is not None:
+            np.savetxt(losses_path, self.losses)
         # torch.save(self, "./run_old/approximation.pt")
 
         if len(self.losses) >= 2:
