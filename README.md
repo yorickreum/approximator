@@ -11,9 +11,9 @@ Approximate an explicitly given function.
 Approximate a piecewise given function.
 
 ### conservation
-Approximate the conservation equation by using its residual.
+Approximate the solution of an initial-boundary value problem governed by the conservation equation by using its residual.
 
 ### laplace
-Approximate Laplace's equation by using its residual.
+Approximate a solution of an initial-boundary value problem governed by the Laplace's equation.
 Use StepsDiscretization to ensure that start and endpoints of domain are in the discretized domain, this is important for boundary conditions.
 Pretraining is used to only fit the boundary conditions first.
