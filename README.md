@@ -15,9 +15,9 @@ Approximate a piecewise given function.
 Approximate the solution of an initial-boundary value problem governed by the conservation equation by using its residual.
 
 ### Laplace
-Approximate a solution of an initial-boundary value problem governed by the Laplace's equation.
-Use StepsDiscretization to ensure that start and endpoints of domain are in the discretized domain, this is important for boundary conditions.
-Pretraining is used to only fit the boundary conditions first.
+Approximate a solution of an initial-boundary value problem governed by Laplace's equation.
+Uses `StepsDiscretization` to ensure that start and endpoints of domain are in the discretized domain, this is important for boundary conditions.
+Pretraining is used to first fit the neural network to the boundary conditions, then to the PDE.
 
 [comment]: <> (LaTeX-Test: <img src="https://render.githubusercontent.com/render/math?math=e^{i \pi} = -1">)
 
