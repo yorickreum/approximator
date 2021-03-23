@@ -3,7 +3,7 @@
 Uses PyTorch to approximate arbitrary functions (currently from 2D to 1D) by giving a domain and one or multiple residuals for (parts of) the domain.
 Can be used especially for the approximation of partial differential equations.
 
-## Examples (in `./examples/sin`)
+## Examples (in `examples`)
 ### Sinus
 Approximate an explicitly given function.
 
